@@ -28,7 +28,7 @@ export HF_ENDPOINT=https://hf-mirror.com
 huggingface-cli download --resume-download InstantX/InstantID --local-dir checkpoints
 ```
 
-For face encoder, you need to manutally download via this [URL](https://github.com/deepinsight/insightface/issues/1896#issuecomment-1023867304) to `models/antelopev2` as the default link is invalid. Once you have prepared all models, the folder tree should be like:
+For face encoder, you need to manually download via this [URL](https://github.com/deepinsight/insightface/issues/1896#issuecomment-1023867304) to `models/antelopev2` as the default link is invalid. Once you have prepared all models, the folder tree should be like:
 
 ```
   .
@@ -97,7 +97,7 @@ Comparison with InsightFace Swapper (also known as ROOP or Refactor). However, i
 - For higher text control ability, decrease ip_adapter_scale.
 - For specific styles, choose corresponding base model makes differences.
 
-# Acknowledgements
+## Acknowledgements
 - Our work is highly inspired by [IP-Adapter](https://github.com/tencent-ailab/IP-Adapter) and [ControlNet](https://github.com/lllyasviel/ControlNet). Thanks for their great works!
 - Thanks to the HuggingFace team for their generous GPU support!
 
