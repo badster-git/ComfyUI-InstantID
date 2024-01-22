@@ -1,0 +1,8 @@
+opencv-python
+transformers
+accelerate
+insightface
+safetensors
+diffusers[torch]
+omegaconf 
+ip_adapter

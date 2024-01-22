@@ -5,9 +5,10 @@ from PIL import Image
 
 from diffusers.utils import load_image
 from diffusers.models import ControlNetModel
+from diffusers import StableDiffusionXLPipeline
 
 from insightface.app import FaceAnalysis
-from pipeline_stable_diffusion_xl_instantid import StableDiffusionXLInstantIDPipeline, draw_kps
+from .pipeline_stable_diffusion_xl_instantid import StableDiffusionXLInstantIDPipeline, draw_kps
 
 def resize_img(input_image, max_side=1280, min_side=1024, size=None, 
                pad_to_max_side=False, mode=Image.BILINEAR, base_pixel_number=64):
@@ -43,19 +44,26 @@ if __name__ == "__main__":
     controlnet_path = f'./checkpoints/ControlNetModel'
 
     # Load pipeline
-    controlnet = ControlNetModel.from_pretrained(controlnet_path, torch_dtype=torch.float16)
+    controlnet = ControlNetModel.from_pretrained(controlnet_path, torch_dtype=torch.float16, use_safetensors=True)
 
-    base_model_path = 'stabilityai/stable-diffusion-xl-base-1.0'
+    base_model_path = '/nieta_fs/ops/models/checkpoint/sd_xl_base_1.0.safetensors'
+    ckpt_cache_path =  './tmp/tmpckpt.safetensors'
+    StableDiffusionXLPipeline.from_single_file(
+        pretrained_model_link_or_path=base_model_path,
+        torch_dtype=torch.float16,
+        cache_dir='./tmp',
+    ).save_pretrained(ckpt_cache_path, safe_serialization=True)
+       
 
     pipe = StableDiffusionXLInstantIDPipeline.from_pretrained(
-        base_model_path,
+        ckpt_cache_path,
         controlnet=controlnet,
         torch_dtype=torch.float16,
     )
     pipe.cuda()
     pipe.load_ip_adapter_instantid(face_adapter)
 
-    prompt = "analog film photo of a man. faded film, desaturated, 35mm photo, grainy, vignette, vintage, Kodachrome, Lomography, stained, highly detailed, found footage, masterpiece, best quality"
+    prompt = "anime film screenshot of a man, masterpiece, best quality"
     n_prompt = "(lowres, low quality, worst quality:1.2), (text:1.2), watermark, painting, drawing, illustration, glitch, deformed, mutated, cross-eyed, ugly, disfigured (lowres, low quality, worst quality:1.2), (text:1.2), watermark, painting, drawing, illustration, glitch,deformed, mutated, cross-eyed, ugly, disfigured"
 
     face_image = load_image("./examples/yann-lecun_resize.jpg")
