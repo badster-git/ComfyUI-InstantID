@@ -41,10 +41,13 @@ For face encoder, you need to manually download via this [URL](https://github.co
 
 ## Usage
 
-Choose a SDXL base ckpt. 
+Choose a SDXL base ckpt. You can also try SDXL Turbo with 4 steps, very efficient for fast testing.
 
-First time loading usually takes more than 80s, but the node will try its best to cache models and input image.
+First time loading usually takes more than 60s, but the node will try its best to cache models.
 
+<img width="1292" alt="截屏2024-01-23 03 24 35" src="https://github.com/huxiuhan/ComfyUI-InstantID/assets/1184998/89f38aa8-8052-40eb-9027-086578583106">
+
+<img width="1248" alt="截屏2024-01-23 03 54 10" src="https://github.com/huxiuhan/ComfyUI-InstantID/assets/1184998/77dfa2bb-8903-4c5a-bb4d-24aa503ad223">
 
 ## Original Project 
 <a href='https://instantid.github.io/'><img src='https://img.shields.io/badge/Project-Page-green'></a> 
