@@ -2,7 +2,7 @@
 
 This is a thin wrapper custom node for [Instant ID](https://github.com/InstantID/InstantID). It's providing basic testing interface for playing around with Instant ID functions. Forgive me for not implementing stepping progress indicator.
 
- It's not following ComfyUI module design nicely, but I just want to set it up for quick testing. Hope IPAdapterPlus will do better integrating to ComfyUI ecosystems...
+It's not following ComfyUI module design nicely, but I just want to set it up for quick testing. Hope IPAdapterPlus will do better integrating to ComfyUI ecosystems...
 
 ## Install 
 
@@ -15,11 +15,16 @@ pip install -r requirements.txt
 
 ## Download Models
 
+## Download
+
 You can directly download the model from [Huggingface](https://huggingface.co/InstantX/InstantID).
 You also can download the model in python script:
 
-```
-python download_models.py
+```python
+from huggingface_hub import hf_hub_download
+hf_hub_download(repo_id="InstantX/InstantID", filename="ControlNetModel/config.json", local_dir="./checkpoints")
+hf_hub_download(repo_id="InstantX/InstantID", filename="ControlNetModel/diffusion_pytorch_model.safetensors", local_dir="./checkpoints")
+hf_hub_download(repo_id="InstantX/InstantID", filename="ip-adapter.bin", local_dir="./checkpoints")
 ```
 
 If you cannot access to Huggingface, you can use [hf-mirror](https://hf-mirror.com/) to download models.
