@@ -4,6 +4,8 @@ This is a thin wrapper custom node for [Instant ID](https://github.com/InstantID
 
 It's not following ComfyUI module design nicely, but I just want to set it up for quick testing. Hope IPAdapterPlus will do better integrating to ComfyUI ecosystems...
 
+A little more explanation: Yes, I know it's great to break down nodes; but it's diffuser based implementation and its inputs / outputs are not compatible with existing other nodes. Even if you break down nodes, those nodes are just connecting each others within the group. Let's wait for better IPAdapterPlus implementation instead of introducing yet another bunch of fancy nodes just for one purpose.
+
 ## Install 
 
 Just as other custom nodes:
