@@ -15,9 +15,11 @@ import cv2
 import numpy as np
 from PIL import Image
 
+import diffusers
 from diffusers.utils import load_image
 from diffusers.models import ControlNetModel
 from diffusers import StableDiffusionXLPipeline
+from huggingface_hub import hf_hub_download
 
 from diffusers.pipelines.controlnet.multicontrolnet import MultiControlNetModel
 from insightface.app import FaceAnalysis
@@ -25,6 +27,13 @@ from insightface.app import FaceAnalysis
 from .controlnet_util import openpose, get_depth_map, get_canny_image
 
 CUSTOM_NODE_CWD = os.path.dirname(os.path.realpath(__file__))
+
+SCHEDULER_KWARGS = hf_hub_download(
+    repo_id="wangqixun/YamerMIX_v8",
+    subfolder="scheduler",
+    filename="scheduler_config.json",
+)
+SCHEDULER = diffusers.EulerDiscreteScheduler.from_config(SCHEDULER_KWARGS)
 
 
 class InstantIDSampler:
@@ -35,6 +44,7 @@ class InstantIDSampler:
         self.controlnet = None
         self.previous_ckpt = None
         self.pipe = None
+        self.scheduler = SCHEDULER
 
     @classmethod
     def INPUT_TYPES(s):
@@ -46,14 +56,34 @@ class InstantIDSampler:
                 "negative": ("STRING", {"multiline": True}),
                 "steps": ("INT", {"default": 30, "min": 1, "max": 10000}),
                 "cfg": ("FLOAT", {"default": 5, "min": 0.0, "max": 100.0}),
-                "strength": ("FLOAT", {"default": 0.8, "min": 0.0, "max": 1.0}),
+                "ip_adapter_strength": (
+                    "FLOAT",
+                    {"default": 0.8, "min": 0.0, "max": 1.5},
+                ),
                 "pose_strength": ("FLOAT", {"default": 0.8, "min": 0.0, "max": 1.5}),
                 "canny_strength": ("FLOAT", {"default": 0.8, "min": 0.0, "max": 1.5}),
                 "depth_strength": ("FLOAT", {"default": 0.8, "min": 0.0, "max": 1.5}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
                 "image": ("IMAGE",),
-                "enhance_face_region": ("BOOLEAN", {"default": False, "label_on": "on", "label_off": "off"})
-            }
+                "enhance_face_region": (
+                    "BOOLEAN",
+                    {"default": False, "label_on": "on", "label_off": "off"},
+                ),
+                "scheduler": (
+                    [
+                        "DEISMultistepScheduler",
+                        "HeunDiscreteScheduler",
+                        "EulerDiscreteScheduler",
+                        "DPMSolverMultistepScheduler",
+                        "DPMSolverMultistepScheduler-Karras",
+                        "DPMSolverMultistepScheduler-Karras-SDE",
+                    ],
+                    {"default": "EulerDiscreteScheduler"},
+                ),
+            },
+            "optional": {
+                "pose_image_optional": ("IMAGE",),
+            },
         }
 
     RETURN_TYPES = ("IMAGE",)
@@ -70,16 +100,17 @@ class InstantIDSampler:
         negative,
         steps,
         cfg,
-        strength,
+        ip_adapter_strength,
         pose_strength,
         canny_strength,
         depth_strength,
         seed,
         image,
-        enhance_face_region
+        enhance_face_region,
+        scheduler,
+        pose_image_optional=None,
     ):
 
-        print("Instant ID Current Working Dir:", CUSTOM_NODE_CWD)
 
         if self.face_app is None:
             app = FaceAnalysis(
@@ -97,7 +128,6 @@ class InstantIDSampler:
         # Load pipeline
         if self.controlnet is None:
             self.controlnet = controlnet
-            print("CONTROLNET: ", self.controlnet)
 
         # prepare ckpt for diffusers
         if self.previous_ckpt != ckpt_name:
@@ -115,13 +145,32 @@ class InstantIDSampler:
                 ckpt_cache_path,
                 controlnet=self.controlnet,
                 torch_dtype=torch.float16,
+                scheduler=self.scheduler,
             )
+
+            # self.pipe.scheduler = diffusers.EulerDiscreteScheduler.from_config(
+            #     self.pipe.scheduler.config
+            # )
             self.pipe.cuda()
             self.pipe.load_ip_adapter_instantid(face_adapter)
-            print("Instant ID Ckpt Reloaded.")
 
         prompt = positive
         n_prompt = negative
+
+        scheduler_class_name = scheduler.split("-")[0]
+
+        add_kwargs = {}
+        if len(scheduler.split("-")) > 1:
+            add_kwargs["use_karras_sigmas"] = True
+        if len(scheduler.split("-")) > 2:
+            add_kwargs["algorithm_type"] = "sde-dpmsolver++"
+
+
+        self.scheduler = getattr(diffusers, scheduler_class_name)
+        self.pipe.scheduler = self.scheduler.from_config(
+            self.pipe.scheduler.config, **add_kwargs
+        )
+
 
         face_image = Image.fromarray(
             np.clip(255.0 * image[0].cpu().numpy(), 0, 255).astype(np.uint8)
@@ -140,12 +189,39 @@ class InstantIDSampler:
             -1
         ]  # only use the maximum face
 
-        img_controlnet = face_image
-
         face_emb = face_info["embedding"]
         face_kps = draw_kps(face_image, face_info["kps"])
         width, height = face_kps.size
         print("Instant ID Face Info Updated.")
+        img_controlnet = face_image
+
+        if pose_image_optional is not None:
+            pose_image = Image.fromarray(
+                np.clip(255.0 * pose_image_optional[0].cpu().numpy(), 0, 255).astype(
+                    np.uint8
+                )
+            )
+            pose_image = resize_img(pose_image, max_side=1024)
+            img_controlnet = pose_image
+            face_info = self.face_app.get(
+                cv2.cvtColor(np.array(pose_image), cv2.COLOR_RGB2BGR)
+            )
+            if len(face_info) == 0:
+                raise Exception(
+                    f"Cannot find any face in the reference image! Please upload another person image"
+                )
+
+            face_info = face_info[-1]
+            face_kps = draw_kps(pose_image, face_info["kps"])
+
+            width, height = face_kps.size
+
+            # load midas
+            # midas = MidasDetector.from_pretrained("lllyasviel/Annotators")
+            # use depth control
+            # processed_image_midas = midas(pose_image)
+            # processed_image_midas = processed_image_midas.resize(pose_image.size)
+            # final_image.append(processed_image_midas)
 
         controlnet_map_fn = {
             "pose": openpose,
@@ -162,8 +238,12 @@ class InstantIDSampler:
         else:
             control_mask = None
 
-       
-        control_scales = [strength, pose_strength, canny_strength, depth_strength]
+        control_scales = [
+            ip_adapter_strength,
+            pose_strength,
+            canny_strength,
+            depth_strength,
+        ]
 
         control_images = [face_kps] + [
             controlnet_map_fn[key](img_controlnet).resize((width, height))
@@ -174,8 +254,8 @@ class InstantIDSampler:
         # g_cpu.manual_seed(seed)
         generator = torch.Generator(device=self.torch_device).manual_seed(seed)
 
-        self.pipe.set_ip_adapter_scale(strength)
-        
+        self.pipe.set_ip_adapter_scale(ip_adapter_strength)
+
         # result = self.pipe(
         #     prompt=prompt,
         #     negative_prompt=n_prompt,
@@ -299,8 +379,6 @@ class InstantIDMultiControlNetNode:
     CATEGORY = "Instant ID"
 
     def load_controlnets(s, pose_path, canny_path, depth_path):
-        print("Loading Controlnets...")
-
         # Load pipeline
         if s.controlnet is None:
             s.controlnet = ControlNetModel.from_pretrained(
@@ -308,7 +386,6 @@ class InstantIDMultiControlNetNode:
             )
             s.controlnets.append(s.controlnet)
 
-            print("Instant ID Controlnet Loaded.")
 
         for controlnet_path in [
             pose_path,
@@ -316,7 +393,6 @@ class InstantIDMultiControlNetNode:
             depth_path,
         ]:
             # controlnet_path = folder_paths.get_full_path("controlnet", controlnet_name)
-            print("pose controlnet paths: ", controlnet_path)
             # controlnet = comfy.controlnet.load_controlnet(controlnet_path)
             controlnet = ControlNetModel.from_pretrained(
                 controlnet_path, torch_dtype=torch.float16
