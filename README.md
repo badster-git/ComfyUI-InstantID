@@ -1,23 +1,21 @@
-# ComfyUI InstantID 
+# ComfyUI InstantID MultiControlNet
 
-This is a thin wrapper custom node for [Instant ID](https://github.com/InstantID/InstantID). It's providing basic testing interface for playing around with Instant ID functions. Forgive me for not implementing stepping progress indicator.
+This is a custom node for [Instant ID](https://github.com/InstantID/InstantID). Added functionality for modifying scale values for 3 different ControlNets; Pose, Canny, & Depth. Similar to the [InstantID Space](https://huggingface.co/spaces/InstantX/InstantID).
 
-It's not following ComfyUI module design nicely, but I just want to set it up for quick testing. Hope IPAdapterPlus will do better integrating to ComfyUI ecosystems...
+I mainly made this to learn a little bit more about custom nodes within ComfyUI but decided I'd share it. 
 
-A little more explanation: Yes, I know it's great to break down nodes; but it's diffuser based implementation and its inputs / outputs are not compatible with existing other nodes. Even if you break down nodes, those nodes are just connecting each others within the group. Let's wait for better IPAdapterPlus implementation instead of introducing yet another bunch of fancy nodes just for one purpose.
+It's important to note that this workflow uses a lot of VRAM, keep that in mind before attempting to use this. Typically I see usage of around 18-19 GB. 
 
 ## Install 
 
 Just as other custom nodes:
 ```
 cd ComfyUI/custom_nodes/
-git clone https://github.com/huxiuhan/ComfyUI-InstantID.git
+git clone https://github.com/badster-git/ComfyUI-InstantID-MultiControlNet.git
 pip install -r requirements.txt
 ```
 
 ## Download Models
-
-## Download
 
 You can directly download the model from [Huggingface](https://huggingface.co/InstantX/InstantID).
 You also can download the model in python script:
@@ -48,15 +46,22 @@ For face encoder, you need to manually download via this [URL](https://github.co
 
 ## Usage
 
-Choose a SDXL base ckpt. You can also try SDXL Turbo with 4 steps, very efficient for fast testing.
+Choose an SDXL base ckpt. You can also try SDXL Turbo with minimal steps which is very efficient for fast testing.
+
+Model used in the examples can be found [here](https://huggingface.co/SG161222/RealVisXL_V3.0_Turbo).
 
 First time loading usually takes more than 60s, but the node will try its best to cache models.
+ 
 
-<img width="1292" alt="截屏2024-01-23 03 24 35" src="https://github.com/huxiuhan/ComfyUI-InstantID/assets/1184998/89f38aa8-8052-40eb-9027-086578583106">
+<img width="1292" alt="Workflow Example 1" src="./assets/Screenshot 2024-02-12 013622.png">
 
-<img width="1248" alt="截屏2024-01-23 03 54 10" src="https://github.com/huxiuhan/ComfyUI-InstantID/assets/1184998/77dfa2bb-8903-4c5a-bb4d-24aa503ad223">
+<img width="1248" alt="Workflow Example 2" src="./assets/Screenshot 2024-02-12 020559.png">
 
-## Original Project 
+<img width="1248" alt="Workflow Example 2" src="./assets/Screenshot 2024-02-12 024826.png">
+
+<img width="1248" alt="Workflow Example 2" src="./assets/Screenshot 2024-02-12 030305.png">
+
+# Original Project 
 <a href='https://instantid.github.io/'><img src='https://img.shields.io/badge/Project-Page-green'></a> 
 <a href='https://arxiv.org/abs/2401.07519'><img src='https://img.shields.io/badge/Technique-Report-red'></a> 
 <a href='https://huggingface.co/papers/2401.07519'><img src='https://img.shields.io/static/v1?label=Paper&message=Huggingface&color=orange'></a> 
