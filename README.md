@@ -11,7 +11,7 @@ It's important to note that this workflow uses a lot of VRAM, keep that in mind 
 Just as other custom nodes:
 ```
 cd ComfyUI/custom_nodes/
-git clone https://github.com/badster-git/ComfyUI-InstantID-MultiControlNet.git
+git clone https://github.com/badster-git/ComfyUI-InstantID
 pip install -r requirements.txt
 ```
 
