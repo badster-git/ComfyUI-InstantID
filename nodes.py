@@ -29,7 +29,7 @@ from .controlnet_util import openpose, get_depth_map, get_canny_image
 CUSTOM_NODE_CWD = os.path.dirname(os.path.realpath(__file__))
 
 SCHEDULER_KWARGS = hf_hub_download(
-    repo_id="wangqixun/YamerMIX_v8",
+    repo_id="SG161222/RealVisXL_V3.0_Turbo",
     subfolder="scheduler",
     filename="scheduler_config.json",
 )
@@ -44,7 +44,7 @@ class InstantIDSampler:
         self.controlnet = None
         self.previous_ckpt = None
         self.pipe = None
-        self.scheduler = SCHEDULER
+        self.scheduler = SCHEDULER 
 
     @classmethod
     def INPUT_TYPES(s):
@@ -54,32 +54,32 @@ class InstantIDSampler:
                 "controlnet": ("MODEL",),
                 "positive": ("STRING", {"multiline": True}),
                 "negative": ("STRING", {"multiline": True}),
-                "steps": ("INT", {"default": 30, "min": 1, "max": 10000}),
-                "cfg": ("FLOAT", {"default": 5, "min": 0.0, "max": 100.0}),
+                "steps": ("INT", {"default": 25, "min": 1, "max": 10000}),
+                "cfg": ("FLOAT", {"default": 2.5, "min": 0.0, "max": 100.0}),
                 "ip_adapter_strength": (
                     "FLOAT",
                     {"default": 0.8, "min": 0.0, "max": 1.5},
                 ),
-                "pose_strength": ("FLOAT", {"default": 0.8, "min": 0.0, "max": 1.5}),
-                "canny_strength": ("FLOAT", {"default": 0.8, "min": 0.0, "max": 1.5}),
-                "depth_strength": ("FLOAT", {"default": 0.8, "min": 0.0, "max": 1.5}),
+                "pose_strength": ("FLOAT", {"default": 0.4, "min": 0.0, "max": 1.5}),
+                "canny_strength": ("FLOAT", {"default": 0.4, "min": 0.0, "max": 1.5}),
+                "depth_strength": ("FLOAT", {"default": 0.1, "min": 0.0, "max": 1.5}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
                 "image": ("IMAGE",),
                 "enhance_face_region": (
                     "BOOLEAN",
                     {"default": False, "label_on": "on", "label_off": "off"},
                 ),
-                "scheduler": (
-                    [
-                        "DEISMultistepScheduler",
-                        "HeunDiscreteScheduler",
-                        "EulerDiscreteScheduler",
-                        "DPMSolverMultistepScheduler",
-                        "DPMSolverMultistepScheduler-Karras",
-                        "DPMSolverMultistepScheduler-Karras-SDE",
-                    ],
-                    {"default": "EulerDiscreteScheduler"},
-                ),
+                # "scheduler": (
+                #     [
+                #         "DEISMultistepScheduler",
+                #         "HeunDiscreteScheduler",
+                #         "EulerDiscreteScheduler",
+                #         "DPMSolverMultistepScheduler",
+                #         "DPMSolverMultistepScheduler-Karras",
+                #         "DPMSolverMultistepScheduler-Karras-SDE",
+                #     ],
+                #     {"default": "EulerDiscreteScheduler"},
+                # ),
             },
             "optional": {
                 "pose_image_optional": ("IMAGE",),
@@ -107,10 +107,12 @@ class InstantIDSampler:
         seed,
         image,
         enhance_face_region,
-        scheduler,
+        # scheduler,
         pose_image_optional=None,
     ):
 
+        # if self.scheduler is None:
+        #     self.scheduler = scheduler
 
         if self.face_app is None:
             app = FaceAnalysis(
@@ -157,16 +159,16 @@ class InstantIDSampler:
         prompt = positive
         n_prompt = negative
 
-        scheduler_class_name = scheduler.split("-")[0]
+        # scheduler_class_name = scheduler.split("-")[0]
 
         add_kwargs = {}
-        if len(scheduler.split("-")) > 1:
-            add_kwargs["use_karras_sigmas"] = True
-        if len(scheduler.split("-")) > 2:
-            add_kwargs["algorithm_type"] = "sde-dpmsolver++"
+        # if len(scheduler.split("-")) > 1:
+        #     add_kwargs["use_karras_sigmas"] = True
+        # if len(scheduler.split("-")) > 2:
+        #     add_kwargs["algorithm_type"] = "sde-dpmsolver++"
 
 
-        self.scheduler = getattr(diffusers, scheduler_class_name)
+        # self.scheduler = getattr(diffusers, scheduler_class_name)
         self.pipe.scheduler = self.scheduler.from_config(
             self.pipe.scheduler.config, **add_kwargs
         )

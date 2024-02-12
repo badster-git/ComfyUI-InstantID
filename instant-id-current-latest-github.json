@@ -1,0 +1,251 @@
+{
+  "last_node_id": 7,
+  "last_link_id": 5,
+  "nodes": [
+    {
+      "id": 2,
+      "type": "Instant ID MultiControlNet",
+      "pos": [
+        900,
+        350
+      ],
+      "size": {
+        "0": 315,
+        "1": 106
+      },
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            1
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Instant ID MultiControlNet"
+      },
+      "widgets_values": [
+        "thibaud/controlnet-openpose-sdxl-1.0",
+        "diffusers/controlnet-canny-sdxl-1.0",
+        "diffusers/controlnet-depth-sdxl-1.0-small"
+      ],
+      "color": "#43571a",
+      "bgcolor": "#576b2e"
+    },
+    {
+      "id": 5,
+      "type": "PreviewImage",
+      "pos": [
+        1680,
+        350
+      ],
+      "size": {
+        "0": 360,
+        "1": 550
+      },
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      },
+      "color": "#1a5757",
+      "bgcolor": "#2e6b6b"
+    },
+    {
+      "id": 4,
+      "type": "LoadImage",
+      "pos": [
+        880,
+        500
+      ],
+      "size": [
+        320,
+        310
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            2
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null,
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "5d4ae1c421214c610d6fc909.webp",
+        "image"
+      ],
+      "color": "#1a5757",
+      "bgcolor": "#2e6b6b"
+    },
+    {
+      "id": 7,
+      "type": "LoadImage",
+      "pos": [
+        880,
+        850
+      ],
+      "size": [
+        320,
+        310
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            5
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null,
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "OIP (9).jpg",
+        "image"
+      ],
+      "color": "#1a5757",
+      "bgcolor": "#2e6b6b"
+    },
+    {
+      "id": 1,
+      "type": "Instant ID Sampler",
+      "pos": [
+        1230,
+        350
+      ],
+      "size": {
+        "0": 430,
+        "1": 530
+      },
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "controlnet",
+          "type": "MODEL",
+          "link": 1
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 2
+        },
+        {
+          "name": "pose_image_optional",
+          "type": "IMAGE",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            3
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Instant ID Sampler"
+      },
+      "widgets_values": [
+        "realvisxlV30Turbo_v30TurboBakedvae.safetensors",
+        "a photo of a man, wearing a purple shirt, high quality, 35mm",
+        "bad lighting, bad anatomy, ugly, gross, poorly drawn, blurry, hazy, pixelated, low resolution",
+        30,
+        2.5,
+        0.9,
+        0,
+        1,
+        0,
+        787198148547647,
+        "randomize",
+        true
+      ],
+      "color": "#57571a",
+      "bgcolor": "#6b6b2e"
+    }
+  ],
+  "links": [
+    [
+      1,
+      2,
+      0,
+      1,
+      0,
+      "MODEL"
+    ],
+    [
+      2,
+      4,
+      0,
+      1,
+      1,
+      "IMAGE"
+    ],
+    [
+      3,
+      1,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      5,
+      7,
+      0,
+      1,
+      2,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {},
+  "version": 0.4
+}
